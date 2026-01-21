@@ -13,6 +13,8 @@ const COLORS = [
 ];
 
 const AvatarCustomizer: React.FC<AvatarProps> = ({ user, setUser }) => {
+  const bcIcon = user.buildersClub === 'Classic' ? '👷' : user.buildersClub === 'Turbo' ? '🚀' : user.buildersClub === 'Outrageous' ? '🎩' : null;
+
   return (
     <div className="max-w-4xl mx-auto">
       <h2 className="text-3xl font-black mb-8">Customize Your Blox</h2>
@@ -38,7 +40,15 @@ const AvatarCustomizer: React.FC<AvatarProps> = ({ user, setUser }) => {
               <div className="w-20 h-4 bg-black/20 rounded-full" />
             </div>
           </div>
-          <p className="mt-8 font-bold text-gray-500">{user.username}</p>
+          <div className="mt-8 flex flex-col items-center space-y-1">
+            <p className="font-bold text-gray-800 text-lg flex items-center space-x-2">
+              {bcIcon && <span>{bcIcon}</span>}
+              <span>{user.username}</span>
+            </p>
+            {user.buildersClub !== 'None' && (
+              <span className="text-[10px] font-black text-orange-600 uppercase tracking-widest">{user.buildersClub} Builders Club</span>
+            )}
+          </div>
         </div>
 
         {/* Customization Options */}

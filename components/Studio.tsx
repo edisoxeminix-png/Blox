@@ -17,15 +17,12 @@ const Studio: React.FC<StudioProps> = ({ onPlay, user }) => {
 
   const handleGenerate = async () => {
     if (!prompt.trim()) return;
-    
     setIsGenerating(true);
-    setStatus('Asking Gemini to design the universe...');
-    
+    setStatus('Diseñando mundo con Gemini...');
     try {
       const gameData = await generateGameWorld(prompt);
-      setStatus('Generating custom graphics...');
+      setStatus('Generando miniaturas...');
       const thumbnail = await generateGameThumbnail(prompt);
-      
       const fullGame: GameExperience = {
         id: Math.random().toString(36).substr(2, 9),
         title: gameData.title || 'AI Experience',
@@ -33,24 +30,32 @@ const Studio: React.FC<StudioProps> = ({ onPlay, user }) => {
         creator: user.username,
         thumbnail: thumbnail,
         objects: gameData.objects || [],
-        instructions: gameData.instructions || 'Explore the world!'
+        instructions: gameData.instructions || '¡Explora el mundo!'
       };
-      
       setGeneratedGame(fullGame);
     } catch (error) {
       console.error(error);
-      alert('Failed to build world. The AI is taking a coffee break.');
+      alert('Error al construir el mundo.');
     } finally {
       setIsGenerating(false);
       setStatus('');
     }
   };
 
-  const updateObject = (id: string, updates: Partial<BloxObject>) => {
+  const updateObject = (id: string, updates: any) => {
     if (!generatedGame) return;
     setGeneratedGame({
       ...generatedGame,
-      objects: generatedGame.objects.map(obj => obj.id === id ? { ...obj, ...updates } : obj)
+      objects: generatedGame.objects.map(obj => {
+        if (obj.id === id) {
+          const newObj = { ...obj };
+          if (updates.position) newObj.position = { ...newObj.position, ...updates.position };
+          if (updates.color) newObj.color = updates.color;
+          if (updates.size) newObj.size = updates.size;
+          return newObj;
+        }
+        return obj;
+      })
     });
   };
 
@@ -58,155 +63,118 @@ const Studio: React.FC<StudioProps> = ({ onPlay, user }) => {
 
   return (
     <div className="max-w-6xl mx-auto space-y-8 pb-20">
-      <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="flex items-center space-x-4">
-          <div className="p-3 bg-blue-100 rounded-2xl text-2xl">🛠️</div>
+      <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="flex items-center space-x-6">
+          <div className="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center text-2xl shadow-lg">🛠️</div>
           <div>
-            <h2 className="text-3xl font-black">Blox AI Studio</h2>
-            <p className="text-gray-500">Describe your dream world and Gemini will build it in seconds.</p>
+            <h2 className="text-3xl font-black italic uppercase text-gray-900 tracking-tighter">Blox Studio AI</h2>
+            <p className="text-gray-400 font-bold uppercase text-[9px] tracking-widest">Motor de Creación 2011</p>
           </div>
         </div>
-        {user.buildersClub !== 'None' && (
-           <div className="bg-orange-100 border border-orange-200 px-4 py-2 rounded-2xl flex items-center space-x-2">
-             <span className="text-orange-600 font-black">PRO</span>
-             <span className="text-xs font-bold text-orange-800">Builders Club Member</span>
-           </div>
-        )}
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-8">
-          <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 space-y-4">
+      <div className="grid lg:grid-cols-4 gap-8">
+        <div className="lg:col-span-3 space-y-8">
+          <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100 space-y-6">
             <textarea
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              placeholder="e.g., A parkour course in space with spinning neon rings and a treasure at the end..."
-              className="w-full h-32 p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-blue-500 focus:ring-0 transition-all outline-none text-lg"
+              placeholder="Describe tu juego... (ej: Un parkour sobre lava con un castillo al final)"
+              className="w-full h-32 p-6 bg-gray-50 rounded-3xl border-2 border-transparent focus:border-blue-500 outline-none text-lg font-bold transition-all resize-none shadow-inner"
             />
             <button
               onClick={handleGenerate}
               disabled={isGenerating || !prompt.trim()}
-              className="w-full bg-blue-600 text-white font-bold py-4 rounded-2xl shadow-lg hover:shadow-xl transition-all disabled:bg-gray-300 disabled:shadow-none flex items-center justify-center space-x-2"
+              className="w-full bg-blue-600 text-white font-black py-5 rounded-2xl shadow-lg hover:shadow-blue-200 transition-all disabled:bg-gray-200 uppercase tracking-widest"
             >
-              {isGenerating ? (
-                <>
-                  <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent" />
-                  <span>{status}</span>
-                </>
-              ) : (
-                <>
-                  <span>🚀 Build Game</span>
-                </>
-              )}
+              {isGenerating ? status : "🚀 Construir con AI"}
             </button>
           </div>
 
           {generatedGame && (
-            <div className="bg-white rounded-3xl overflow-hidden shadow-xl border border-gray-100 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="grid md:grid-cols-2">
-                <img src={generatedGame.thumbnail} className="w-full h-64 object-cover md:h-full" alt="Preview" />
-                <div className="p-8 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-2xl font-bold">{generatedGame.title}</h3>
-                    <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">READY</span>
-                  </div>
-                  <p className="text-gray-600 text-sm">{generatedGame.description}</p>
-                  <div className="pt-4 flex space-x-3">
-                    <button 
-                      onClick={() => onPlay(generatedGame)}
-                      className="flex-1 bg-green-500 text-white font-bold py-3 rounded-xl hover:bg-green-600 transition-colors"
-                    >
-                      Play Now
-                    </button>
-                  </div>
+            <div className="bg-white rounded-[2rem] overflow-hidden shadow-xl border border-gray-100 animate-in fade-in zoom-in-95 duration-500">
+              <div className="grid md:grid-cols-5">
+                <div className="md:col-span-2">
+                  <img src={generatedGame.thumbnail} className="w-full h-full object-cover min-h-[250px]" alt="Preview" />
+                </div>
+                <div className="md:col-span-3 p-8 flex flex-col justify-center">
+                  <h3 className="text-3xl font-black mb-2 tracking-tighter">{generatedGame.title}</h3>
+                  <p className="text-gray-500 font-bold mb-6 italic text-sm">"{generatedGame.description}"</p>
+                  <button onClick={() => onPlay(generatedGame)} className="w-full bg-green-500 text-white font-black py-4 rounded-xl hover:bg-green-600 shadow-md transition-all hover:-translate-y-1 uppercase italic">¡Jugar Ahora!</button>
                 </div>
               </div>
             </div>
           )}
         </div>
 
-        {/* World Edit Tool Panel */}
         <div className="space-y-6">
-          <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
-            <h3 className="font-bold text-lg mb-4 flex items-center space-x-2">
-              <span>🌎</span>
-              <span>World Edit Tool</span>
+          <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100 h-full flex flex-col">
+            <h3 className="font-black text-lg mb-4 flex items-center space-x-2 uppercase">
+              <span className="text-blue-600">🌎</span><span>Explorador</span>
             </h3>
             
             {generatedGame ? (
-              <div className="space-y-4">
-                <p className="text-xs font-bold text-gray-400 uppercase">Object List</p>
-                <div className="max-h-60 overflow-y-auto space-y-2 pr-2">
+              <div className="space-y-4 flex-1 flex flex-col">
+                <div className="space-y-1 max-h-[250px] overflow-y-auto pr-1">
                   {generatedGame.objects.map(obj => (
                     <button
                       key={obj.id}
                       onClick={() => setSelectedObjectId(obj.id)}
-                      className={`w-full text-left p-3 rounded-xl text-sm font-bold flex items-center justify-between transition-all ${
-                        selectedObjectId === obj.id ? 'bg-blue-600 text-white' : 'bg-gray-50 hover:bg-gray-100'
+                      className={`w-full text-left p-3 rounded-xl text-[10px] font-black flex items-center justify-between transition-all border-2 ${
+                        selectedObjectId === obj.id ? 'bg-blue-600 border-blue-400 text-white shadow-md' : 'bg-gray-50 border-transparent text-gray-500'
                       }`}
                     >
-                      <span>{obj.type.toUpperCase()}: {obj.id.slice(0, 4)}</span>
-                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: obj.color }} />
+                      <span className="uppercase">{obj.type}</span>
+                      <div className="w-3 h-3 rounded-full border border-white" style={{ backgroundColor: obj.color }} />
                     </button>
                   ))}
                 </div>
 
                 {selectedObject && (
-                  <div className="pt-4 border-t border-gray-100 space-y-4 animate-in fade-in zoom-in-95 duration-200">
-                    <div>
-                      <label className="text-xs font-bold text-gray-400 uppercase mb-1 block">Color</label>
-                      <div className="flex flex-wrap gap-2">
-                        {['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF', '#888888', '#FF4500'].map(c => (
-                          <button 
-                            key={c}
-                            onClick={() => updateObject(selectedObject.id, { color: c })}
-                            className={`w-6 h-6 rounded-full border-2 transition-transform ${selectedObject.color === c ? 'border-black scale-110' : 'border-transparent'}`}
-                            style={{ backgroundColor: c }}
-                          />
-                        ))}
-                      </div>
+                  <div className="pt-4 border-t border-gray-100 space-y-4 animate-in slide-in-from-bottom-2">
+                    <div className="space-y-3">
+                       <div>
+                         <label className="text-[9px] font-black text-gray-400 uppercase">Posición X ({selectedObject.position.x.toFixed(1)})</label>
+                         <input type="range" min="-30" max="60" step="0.5" value={selectedObject.position.x} onChange={e => updateObject(selectedObject.id, { position: { x: parseFloat(e.target.value) } })} className="w-full accent-blue-600 h-1 bg-gray-100 rounded-lg appearance-none cursor-pointer" />
+                       </div>
+                       <div>
+                         <label className="text-[9px] font-black text-gray-400 uppercase">Posición Y ({selectedObject.position.y.toFixed(1)})</label>
+                         <input type="range" min="-30" max="30" step="0.5" value={selectedObject.position.y} onChange={e => updateObject(selectedObject.id, { position: { y: parseFloat(e.target.value) } })} className="w-full accent-blue-600 h-1 bg-gray-100 rounded-lg appearance-none cursor-pointer" />
+                       </div>
+                       <div>
+                         <label className="text-[9px] font-black text-gray-400 uppercase">Posición Z ({selectedObject.position.z.toFixed(1)})</label>
+                         <input type="range" min="-5" max="30" step="0.5" value={selectedObject.position.z} onChange={e => updateObject(selectedObject.id, { position: { z: parseFloat(e.target.value) } })} className="w-full accent-blue-600 h-1 bg-gray-100 rounded-lg appearance-none cursor-pointer" />
+                       </div>
+                       <div>
+                         <label className="text-[9px] font-black text-gray-400 uppercase">Tamaño ({selectedObject.size.toFixed(1)})</label>
+                         <input type="range" min="0.5" max="15" step="0.5" value={selectedObject.size} onChange={e => updateObject(selectedObject.id, { size: parseFloat(e.target.value) })} className="w-full accent-blue-600 h-1 bg-gray-100 rounded-lg appearance-none cursor-pointer" />
+                       </div>
                     </div>
-                    <div>
-                      <label className="text-xs font-bold text-gray-400 uppercase mb-1 block">Size: {selectedObject.size}</label>
-                      <input 
-                        type="range" 
-                        min="0.5" 
-                        max="8" 
-                        step="0.5"
-                        value={selectedObject.size}
-                        onChange={(e) => updateObject(selectedObject.id, { size: parseFloat(e.target.value) })}
-                        className="w-full accent-blue-600"
-                      />
+
+                    <div className="flex flex-wrap gap-1">
+                      {['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#FFFFFF', '#000000'].map(c => (
+                        <button key={c} onClick={() => updateObject(selectedObject.id, { color: c })} className={`w-6 h-6 rounded-lg border-2 ${selectedObject.color === c ? 'border-blue-500 scale-110' : 'border-transparent'}`} style={{ backgroundColor: c }} />
+                      ))}
                     </div>
+
                     <button 
                       onClick={() => {
-                        setGeneratedGame({
-                          ...generatedGame,
-                          objects: generatedGame.objects.filter(o => o.id !== selectedObjectId)
-                        });
+                        setGeneratedGame({ ...generatedGame, objects: generatedGame.objects.filter(o => o.id !== selectedObjectId) });
                         setSelectedObjectId(null);
                       }}
-                      className="w-full py-2 bg-red-50 text-red-600 font-bold rounded-xl text-xs hover:bg-red-100"
+                      className="w-full py-2 bg-red-50 text-red-600 font-black rounded-xl text-[9px] uppercase hover:bg-red-100 transition-colors"
                     >
-                      Delete Object
+                      Borrar Bloque
                     </button>
                   </div>
                 )}
               </div>
             ) : (
-              <div className="text-center py-10 text-gray-400 space-y-2">
-                <p className="text-3xl">🏜️</p>
-                <p className="text-xs font-bold">Build a game first to use editing tools.</p>
+              <div className="flex-1 flex flex-col items-center justify-center text-center opacity-20">
+                <div className="text-4xl mb-2">🧱</div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Crea un mundo primero</p>
               </div>
             )}
-          </div>
-          
-          <div className="p-6 bg-yellow-50 rounded-3xl border border-yellow-100">
-            <h4 className="font-bold text-sm mb-2 flex items-center space-x-2">
-              <span>💎</span>
-              <span>Pro Tip</span>
-            </h4>
-            <p className="text-xs text-yellow-800 leading-relaxed font-medium">Builders Club members can add up to 500 objects manually using the advanced scripts panel! (Coming soon)</p>
           </div>
         </div>
       </div>

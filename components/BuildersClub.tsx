@@ -8,6 +8,8 @@ interface BuildersClubProps {
 
 const BuildersClub: React.FC<BuildersClubProps> = ({ onUpgrade }) => {
   const [showPayment, setShowPayment] = useState<BuildersClubType | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [processStep, setProcessStep] = useState('');
   const [formData, setFormData] = useState({ card: '', expiry: '', cvv: '' });
 
   const plans = [
@@ -34,12 +36,28 @@ const BuildersClub: React.FC<BuildersClubProps> = ({ onUpgrade }) => {
     }
   ];
 
-  const handlePayment = (e: React.FormEvent) => {
+  const handlePayment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (showPayment) {
-      alert(`Success! You are now a ${showPayment} Builders Club member.`);
-      onUpgrade(showPayment);
-    }
+    if (!showPayment) return;
+
+    setIsProcessing(true);
+    
+    // Secuencia de procesamiento "Real"
+    setProcessStep('Connecting to Secure Gateway...');
+    await new Promise(r => setTimeout(r, 800));
+    
+    setProcessStep('Verifying Card Information...');
+    await new Promise(r => setTimeout(r, 1200));
+    
+    setProcessStep('Authorizing Membership with Blox Bank...');
+    await new Promise(r => setTimeout(r, 1000));
+
+    setProcessStep('Success! Finalizing Account Upgrade...');
+    await new Promise(r => setTimeout(r, 500));
+
+    onUpgrade(showPayment);
+    setIsProcessing(false);
+    setShowPayment(null);
   };
 
   return (
@@ -51,7 +69,10 @@ const BuildersClub: React.FC<BuildersClubProps> = ({ onUpgrade }) => {
 
       <div className="grid md:grid-cols-3 gap-8">
         {plans.map((plan) => (
-          <div key={plan.type} className={`border-2 rounded-2xl p-8 flex flex-col ${plan.color} shadow-lg transition-transform hover:-translate-y-2`}>
+          <div key={plan.type} className={`border-2 rounded-2xl p-8 flex flex-col ${plan.color} shadow-lg transition-transform hover:-translate-y-2 group`}>
+            <div className="text-5xl mb-4 group-hover:scale-110 transition-transform">
+              {plan.type === 'Classic' ? '👷' : plan.type === 'Turbo' ? '🚀' : '🎩'}
+            </div>
             <h2 className="text-3xl font-black mb-2">{plan.type}</h2>
             <div className="text-4xl font-black mb-6">{plan.price}<span className="text-sm opacity-60">/mo</span></div>
             <ul className="space-y-3 mb-10 flex-1">
@@ -74,69 +95,84 @@ const BuildersClub: React.FC<BuildersClubProps> = ({ onUpgrade }) => {
       {showPayment && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[500] flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-200">
-            <h3 className="text-2xl font-black mb-6">Payment for {showPayment} BC</h3>
-            <form onSubmit={handlePayment} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-gray-400 mb-1 uppercase">Card Number</label>
-                <input 
-                  type="text" 
-                  placeholder="0000 0000 0000 0000"
-                  className="w-full border-2 border-gray-100 p-4 rounded-xl focus:border-orange-500 outline-none font-mono"
-                  value={formData.card}
-                  onChange={e => setFormData({...formData, card: e.target.value})}
-                  required
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-gray-400 mb-1 uppercase">Expiry</label>
-                  <input 
-                    type="text" 
-                    placeholder="MM/YY"
-                    className="w-full border-2 border-gray-100 p-4 rounded-xl focus:border-orange-500 outline-none"
-                    value={formData.expiry}
-                    onChange={e => setFormData({...formData, expiry: e.target.value})}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-400 mb-1 uppercase">CVV</label>
-                  <input 
-                    type="text" 
-                    placeholder="123"
-                    className="w-full border-2 border-gray-100 p-4 rounded-xl focus:border-orange-500 outline-none"
-                    value={formData.cvv}
-                    onChange={e => setFormData({...formData, cvv: e.target.value})}
-                    required
-                  />
+            {isProcessing ? (
+              <div className="py-12 flex flex-col items-center text-center space-y-6">
+                <div className="w-16 h-16 border-4 border-orange-500 border-t-transparent rounded-full animate-spin" />
+                <div className="space-y-2">
+                  <p className="text-xl font-black text-gray-800">Processing Payment</p>
+                  <p className="text-xs font-bold text-orange-600 animate-pulse uppercase tracking-widest">{processStep}</p>
                 </div>
               </div>
-              <div className="pt-4 flex space-x-3">
-                 <button 
-                  type="button" 
-                  onClick={() => setShowPayment(null)}
-                  className="flex-1 bg-gray-100 text-gray-600 font-bold py-4 rounded-xl"
-                >
-                  Cancel
-                </button>
-                <button 
-                  type="submit"
-                  className="flex-1 bg-green-600 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-green-700"
-                >
-                  Pay Now
-                </button>
-              </div>
-              <p className="text-[10px] text-gray-400 text-center mt-4 italic">Note: This is a simulation. Do not enter real credit card details.</p>
-            </form>
+            ) : (
+              <>
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-2xl font-black">Secure Checkout</h3>
+                  <span className="bg-orange-100 text-orange-600 px-3 py-1 rounded-lg text-xs font-black">{showPayment} BC</span>
+                </div>
+                <form onSubmit={handlePayment} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-400 mb-1 uppercase tracking-widest">Card Number</label>
+                    <input 
+                      type="text" 
+                      placeholder="XXXX XXXX XXXX XXXX"
+                      className="w-full border-2 border-gray-100 p-4 rounded-xl focus:border-orange-500 outline-none font-mono"
+                      value={formData.card}
+                      onChange={e => setFormData({...formData, card: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-400 mb-1 uppercase tracking-widest">Expiry</label>
+                      <input 
+                        type="text" 
+                        placeholder="MM/YY"
+                        className="w-full border-2 border-gray-100 p-4 rounded-xl focus:border-orange-500 outline-none"
+                        value={formData.expiry}
+                        onChange={e => setFormData({...formData, expiry: e.target.value})}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-400 mb-1 uppercase tracking-widest">CVV</label>
+                      <input 
+                        type="password" 
+                        placeholder="***"
+                        className="w-full border-2 border-gray-100 p-4 rounded-xl focus:border-orange-500 outline-none"
+                        value={formData.cvv}
+                        onChange={e => setFormData({...formData, cvv: e.target.value})}
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="pt-4 flex space-x-3">
+                    <button 
+                      type="button" 
+                      onClick={() => setShowPayment(null)}
+                      className="flex-1 bg-gray-50 text-gray-400 font-bold py-4 rounded-xl hover:bg-gray-100 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button 
+                      type="submit"
+                      className="flex-1 bg-green-600 text-white font-black py-4 rounded-xl shadow-lg hover:bg-green-700 active:scale-95 transition-all"
+                    >
+                      Pay Now
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-gray-400 text-center mt-4 italic font-medium">This is a simulated secure payment gateway. No real charges will occur.</p>
+                </form>
+              </>
+            )}
           </div>
         </div>
       )}
 
-      <div className="bg-white border border-gray-200 rounded-3xl p-10 flex items-center space-x-8 shadow-sm">
-        <div className="text-7xl">👷‍♂️</div>
+      <div className="bg-white border border-gray-200 rounded-3xl p-10 flex flex-col md:flex-row items-center space-y-6 md:space-y-0 md:space-x-8 shadow-sm">
+        <div className="text-7xl">🛠️</div>
         <div>
           <h4 className="text-2xl font-black mb-2">Why join Builders Club?</h4>
-          <p className="text-gray-500 font-medium">Builders Club is for the creators who want more. Get a daily allowance of Tix, create more worlds, and get exclusive virtual items for your character. It's how you show everyone you're a serious Bloxer!</p>
+          <p className="text-gray-500 font-medium leading-relaxed">Builders Club is for the creators who want more. Get a daily allowance of Tix, create more worlds, and get exclusive virtual items for your character. It's how you show everyone you're a serious Bloxer!</p>
         </div>
       </div>
     </div>

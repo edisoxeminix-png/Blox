@@ -46,4 +46,5 @@ export interface UserProfile {
   friends: FriendRelation[];
   pendingRequests: FriendRelation[];
   buildersClub: BuildersClubType;
+  hasExecutor: boolean;
 }
