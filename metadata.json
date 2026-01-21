@@ -1,0 +1,8 @@
+{
+  "name": "Blox",
+  "description": "A Blox in 2011 age (tho create a game you use AI)\nThis is a powerful emulator 2.5D, is perfect.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
