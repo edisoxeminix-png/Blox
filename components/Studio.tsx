@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { generateGameThumbnail } from '../services/geminiService';
-import { GameExperience, BloxObject, UserProfile } from '../types';
+import { GameExperience, BloxObject, UserProfile, BloxMaterial } from '../types';
 
 interface StudioProps {
   onPlay: (game: GameExperience) => void;
@@ -13,54 +13,41 @@ const Studio: React.FC<StudioProps> = ({ onPlay, user }) => {
   const [gameDesc, setGameDesc] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedGame, setGeneratedGame] = useState<GameExperience | null>(null);
-  const [status, setStatus] = useState('');
   const [selectedObjectId, setSelectedObjectId] = useState<string | null>(null);
 
   const handleCreateNewGame = async () => {
     if (!gameTitle.trim()) return;
     setIsGenerating(true);
-    setStatus('Gemini está diseñando tu portada...');
     try {
       const thumbnail = await generateGameThumbnail(gameTitle);
-      
       const newGame: GameExperience = {
         id: Math.random().toString(36).substr(2, 9),
         title: gameTitle,
-        description: gameDesc || 'Una nueva experiencia creada en Blox Studio',
+        description: gameDesc || 'Creación manual en Blox Studio 2026',
         creator: user.username,
         thumbnail: thumbnail,
-        objects: [
-          { id: 'spawn', type: 'box', position: { x: 0, y: 0, z: 0 }, color: '#888888', size: 4 }
-        ],
-        instructions: '¡Explora esta creación!'
+        objects: [{ id: 'spawn', type: 'box', position: { x: 0, y: 0, z: 0 }, color: '#222222', size: 4, material: 'slate' }],
+        instructions: '¡Construye bloque a bloque!'
       };
-      
       setGeneratedGame(newGame);
       setSelectedObjectId('spawn');
     } catch (error) {
-      console.error(error);
-      alert('Error al crear el proyecto.');
+      alert('Error al iniciar el motor de construcción.');
     } finally {
       setIsGenerating(false);
-      setStatus('');
     }
   };
 
-  const addObject = (type: 'box' | 'sphere' | 'npc' | 'goal' | 'lava') => {
+  const addObject = (type: any) => {
     if (!generatedGame) return;
     const newId = 'obj-' + Math.random().toString(36).substr(2, 5);
-    const newObj: BloxObject = {
-      id: newId,
-      type: type,
-      position: { x: 5, y: 0, z: 2 },
-      color: type === 'lava' ? '#FF4500' : type === 'goal' ? '#FFD700' : '#3388FF',
-      size: type === 'npc' ? 1.5 : 2
+    const newObj: BloxObject = { 
+      id: newId, type: type, 
+      position: { x: (Math.random() - 0.5) * 10, y: (Math.random() - 0.5) * 10, z: 2 }, 
+      color: type === 'lava' ? '#FF0000' : type === 'water' ? '#0066FF' : '#FFFFFF', 
+      size: 2, material: 'plastic' 
     };
-    
-    setGeneratedGame({
-      ...generatedGame,
-      objects: [...generatedGame.objects, newObj]
-    });
+    setGeneratedGame({ ...generatedGame, objects: [...generatedGame.objects, newObj] });
     setSelectedObjectId(newId);
   };
 
@@ -68,198 +55,138 @@ const Studio: React.FC<StudioProps> = ({ onPlay, user }) => {
     if (!generatedGame) return;
     setGeneratedGame({
       ...generatedGame,
-      objects: generatedGame.objects.map(obj => {
-        if (obj.id === id) {
-          const newObj = { ...obj };
-          if (updates.position) newObj.position = { ...newObj.position, ...updates.position };
-          if (updates.color) newObj.color = updates.color;
-          if (updates.size) newObj.size = updates.size;
-          return newObj;
-        }
-        return obj;
-      })
+      objects: generatedGame.objects.map(obj => obj.id === id ? { ...obj, ...updates } : obj)
     });
   };
 
   const selectedObject = generatedGame?.objects.find(o => o.id === selectedObjectId);
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 pb-20">
-      <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-6">
+    <div className="max-w-7xl mx-auto space-y-10 pb-20">
+      <div className="bg-black/40 backdrop-blur-xl rounded-[2rem] p-8 border border-white/5 flex flex-col md:flex-row items-center justify-between gap-8 shadow-2xl">
         <div className="flex items-center space-x-6">
-          <div className="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center text-2xl shadow-lg">🛠️</div>
+          <div className="w-16 h-16 bg-gradient-to-br from-red-600 to-red-900 rounded-3xl flex items-center justify-center text-3xl shadow-lg animate-pulse">🛠️</div>
           <div>
-            <h2 className="text-3xl font-black italic uppercase text-gray-900 tracking-tighter">Blox Studio</h2>
-            <p className="text-gray-400 font-bold uppercase text-[9px] tracking-widest">Editor de Mundos Manual</p>
+            <h2 className="text-3xl font-black italic uppercase text-white tracking-tighter">STUDIO <span className="text-red-600">EVO</span></h2>
+            <p className="text-gray-500 font-black uppercase text-[9px] tracking-[0.4em]">Advanced Editor V4.0</p>
           </div>
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-4 gap-8">
-        <div className="lg:col-span-3 space-y-8">
-          {!generatedGame ? (
-            <div className="bg-white rounded-[2rem] p-10 shadow-sm border border-gray-100 space-y-6">
-              <h3 className="text-2xl font-black uppercase italic text-blue-600">Nuevo Proyecto</h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Nombre del Juego</label>
-                  <input
-                    type="text"
-                    value={gameTitle}
-                    onChange={(e) => setGameTitle(e.target.value)}
-                    placeholder="Ej: Súper Parkour 2011"
-                    className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none text-lg font-bold transition-all"
-                  />
-                </div>
-                <div>
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Descripción</label>
-                  <textarea
-                    value={gameDesc}
-                    onChange={(e) => setGameDesc(e.target.value)}
-                    placeholder="Cuéntale a otros de qué trata tu juego..."
-                    className="w-full h-24 p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-blue-500 outline-none text-sm font-bold transition-all resize-none"
-                  />
-                </div>
-              </div>
-              <button
-                onClick={handleCreateNewGame}
-                disabled={isGenerating || !gameTitle.trim()}
-                className="w-full bg-blue-600 text-white font-black py-5 rounded-2xl shadow-lg hover:shadow-blue-200 transition-all disabled:bg-gray-200 uppercase tracking-widest"
-              >
-                {isGenerating ? status : "🚀 Empezar a Construir"}
-              </button>
+      {!generatedGame ? (
+        <div className="max-w-2xl mx-auto bg-white/5 border border-white/10 rounded-[2.5rem] p-10 space-y-8 shadow-2xl">
+          <div className="text-center space-y-2">
+            <h3 className="text-2xl font-black text-white italic tracking-tighter uppercase">Nuevo Proyecto</h3>
+            <p className="text-gray-500 font-bold text-[10px] uppercase tracking-widest">Inicia tu creación manual</p>
+          </div>
+          <div className="space-y-4">
+            <div className="space-y-1">
+              <label className="text-[9px] font-black text-gray-500 uppercase tracking-[0.2em] ml-2">Nombre del Juego</label>
+              <input type="text" value={gameTitle} onChange={(e) => setGameTitle(e.target.value)} placeholder="BLOXY ADVENTURE" className="w-full p-4 bg-black border border-white/10 rounded-xl text-white font-black italic text-lg focus:border-red-600 outline-none transition-all placeholder:text-white/10 shadow-inner" />
             </div>
-          ) : (
-            <div className="space-y-6">
-              <div className="bg-white rounded-[2rem] overflow-hidden shadow-xl border border-gray-100 animate-in fade-in zoom-in-95 duration-500">
-                <div className="grid md:grid-cols-5">
-                  <div className="md:col-span-2 relative">
-                    <img src={generatedGame.thumbnail} className="w-full h-full object-cover min-h-[250px]" alt="Preview" />
-                    <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                       <span className="text-white font-black uppercase text-xs">Portada generada por Gemini</span>
-                    </div>
-                  </div>
-                  <div className="md:col-span-3 p-8 flex flex-col justify-center">
-                    <h3 className="text-3xl font-black mb-1 tracking-tighter">{generatedGame.title}</h3>
-                    <p className="text-gray-400 font-bold mb-6 text-xs uppercase tracking-widest">Creado por {generatedGame.creator}</p>
-                    <div className="flex space-x-2">
-                       <button onClick={() => onPlay(generatedGame)} className="flex-1 bg-green-500 text-white font-black py-4 rounded-xl hover:bg-green-600 shadow-md transition-all hover:-translate-y-1 uppercase italic">¡Probar Juego!</button>
-                       <button onClick={() => setGeneratedGame(null)} className="bg-gray-100 text-gray-500 px-6 py-4 rounded-xl hover:bg-gray-200 transition-all uppercase font-black text-xs">Cerrar</button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Toolbox */}
-              <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100">
-                <h3 className="text-sm font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Herramientas (Toolbox)</h3>
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
-                  {[
-                    { type: 'box', label: 'Cubo', icon: '📦' },
-                    { type: 'sphere', label: 'Esfera', icon: '⚽' },
-                    { type: 'npc', label: 'Guest', icon: '👤' },
-                    { type: 'lava', label: 'Lava', icon: '🔥' },
-                    { type: 'goal', label: 'Meta', icon: '🏆' }
-                  ].map((tool) => (
-                    <button
-                      key={tool.type}
-                      onClick={() => addObject(tool.type as any)}
-                      className="flex flex-col items-center justify-center p-4 bg-gray-50 rounded-2xl border-2 border-transparent hover:border-blue-500 hover:bg-white transition-all group"
-                    >
-                      <span className="text-3xl mb-2 group-hover:scale-110 transition-transform">{tool.icon}</span>
-                      <span className="text-[10px] font-black uppercase tracking-widest">{tool.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
+            <textarea value={gameDesc} onChange={(e) => setGameDesc(e.target.value)} placeholder="DESCRIPCIÓN" className="w-full h-24 p-4 bg-black border border-white/10 rounded-xl text-white font-medium text-xs focus:border-red-600 outline-none transition-all placeholder:text-white/10 resize-none shadow-inner" />
+          </div>
+          <button onClick={handleCreateNewGame} disabled={isGenerating || !gameTitle.trim()} className="w-full bg-white text-black font-black py-3 rounded-xl shadow-xl hover:bg-red-600 hover:text-white transition-all active:scale-95 uppercase tracking-[0.3em] disabled:opacity-20 text-xs">
+            {isGenerating ? "INICIANDO..." : "EMPEZAR A CONSTRUIR"}
+          </button>
         </div>
-
-        <div className="space-y-6">
-          <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100 h-full flex flex-col">
-            <h3 className="font-black text-lg mb-4 flex items-center space-x-2 uppercase">
-              <span className="text-blue-600">🌎</span><span>Explorador</span>
-            </h3>
-            
-            {generatedGame ? (
-              <div className="space-y-4 flex-1 flex flex-col">
-                <div className="space-y-1 max-h-[300px] overflow-y-auto pr-1">
-                  {generatedGame.objects.map(obj => (
-                    <button
-                      key={obj.id}
-                      onClick={() => setSelectedObjectId(obj.id)}
-                      className={`w-full text-left p-3 rounded-xl text-[10px] font-black flex items-center justify-between transition-all border-2 ${
-                        selectedObjectId === obj.id ? 'bg-blue-600 border-blue-400 text-white shadow-md' : 'bg-gray-50 border-transparent text-gray-500 hover:bg-gray-100'
-                      }`}
-                    >
-                      <span className="uppercase">{obj.type} {obj.id === 'spawn' && '(Base)'}</span>
-                      <div className="w-3 h-3 rounded-full border border-white" style={{ backgroundColor: obj.color }} />
-                    </button>
-                  ))}
-                </div>
-
-                {selectedObject && (
-                  <div className="pt-4 border-t border-gray-100 space-y-4 animate-in slide-in-from-bottom-2">
-                    <div className="space-y-3">
-                       <div>
-                         <div className="flex justify-between items-center mb-1">
-                            <label className="text-[9px] font-black text-gray-400 uppercase">Posición X</label>
-                            <span className="text-[9px] font-bold text-blue-600">{selectedObject.position.x.toFixed(1)}</span>
-                         </div>
-                         <input type="range" min="-40" max="60" step="0.5" value={selectedObject.position.x} onChange={e => updateObject(selectedObject.id, { position: { x: parseFloat(e.target.value) } })} className="w-full accent-blue-600 h-1 bg-gray-100 rounded-lg appearance-none cursor-pointer" />
-                       </div>
-                       <div>
-                         <div className="flex justify-between items-center mb-1">
-                            <label className="text-[9px] font-black text-gray-400 uppercase">Posición Y</label>
-                            <span className="text-[9px] font-bold text-blue-600">{selectedObject.position.y.toFixed(1)}</span>
-                         </div>
-                         <input type="range" min="-40" max="40" step="0.5" value={selectedObject.position.y} onChange={e => updateObject(selectedObject.id, { position: { y: parseFloat(e.target.value) } })} className="w-full accent-blue-600 h-1 bg-gray-100 rounded-lg appearance-none cursor-pointer" />
-                       </div>
-                       <div>
-                         <div className="flex justify-between items-center mb-1">
-                            <label className="text-[9px] font-black text-gray-400 uppercase">Posición Z</label>
-                            <span className="text-[9px] font-bold text-blue-600">{selectedObject.position.z.toFixed(1)}</span>
-                         </div>
-                         <input type="range" min="-5" max="40" step="0.5" value={selectedObject.position.z} onChange={e => updateObject(selectedObject.id, { position: { z: parseFloat(e.target.value) } })} className="w-full accent-blue-600 h-1 bg-gray-100 rounded-lg appearance-none cursor-pointer" />
-                       </div>
-                       <div>
-                         <div className="flex justify-between items-center mb-1">
-                            <label className="text-[9px] font-black text-gray-400 uppercase">Tamaño</label>
-                            <span className="text-[9px] font-bold text-blue-600">{selectedObject.size.toFixed(1)}</span>
-                         </div>
-                         <input type="range" min="0.5" max="15" step="0.5" value={selectedObject.size} onChange={e => updateObject(selectedObject.id, { size: parseFloat(e.target.value) })} className="w-full accent-blue-600 h-1 bg-gray-100 rounded-lg appearance-none cursor-pointer" />
-                       </div>
-                    </div>
-
-                    <div className="flex flex-wrap gap-1">
-                      {['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#FFFFFF', '#000000', '#FFA500', '#888888'].map(c => (
-                        <button key={c} onClick={() => updateObject(selectedObject.id, { color: c })} className={`w-6 h-6 rounded-lg border-2 transition-transform hover:scale-110 ${selectedObject.color === c ? 'border-blue-500 scale-110 shadow-md' : 'border-transparent'}`} style={{ backgroundColor: c }} />
-                      ))}
-                    </div>
-
-                    <button 
-                      onClick={() => {
-                        if (selectedObjectId === 'spawn') return alert('No puedes borrar el punto de inicio.');
-                        setGeneratedGame({ ...generatedGame, objects: generatedGame.objects.filter(o => o.id !== selectedObjectId) });
-                        setSelectedObjectId(null);
-                      }}
-                      className="w-full py-2 bg-red-50 text-red-600 font-black rounded-xl text-[9px] uppercase hover:bg-red-100 transition-colors"
-                    >
-                      Borrar Bloque
-                    </button>
+      ) : (
+        <div className="grid lg:grid-cols-12 gap-8">
+          <div className="lg:col-span-8 space-y-6">
+            <div className="relative aspect-video bg-black rounded-[2.5rem] overflow-hidden border border-white/10 group shadow-2xl">
+               <img src={generatedGame.thumbnail} className="w-full h-full object-cover opacity-50 blur-sm" />
+               <div className="absolute inset-0 flex flex-col items-center justify-center space-y-4">
+                  <div className="text-center">
+                    <h3 className="text-3xl font-black text-white italic tracking-tighter uppercase">{generatedGame.title}</h3>
+                    <p className="text-red-500 font-black text-[9px] tracking-widest uppercase">Modo Edición Live</p>
                   </div>
-                )}
+                  <button onClick={() => onPlay(generatedGame)} className="bg-white text-black px-8 py-3 rounded-xl font-black tracking-[0.1em] hover:scale-105 active:scale-95 transition-all shadow-xl uppercase italic text-xs">Probar Juego</button>
+               </div>
+            </div>
+
+            <div className="bg-black/20 backdrop-blur-md rounded-[2rem] p-6 border border-white/5 space-y-4 shadow-xl">
+              <h3 className="text-[9px] font-black text-gray-500 uppercase tracking-widest">Herramientas</h3>
+              <div className="grid grid-cols-4 sm:grid-cols-7 gap-4">
+                {[
+                  { id: 'box', label: 'Part', icon: '📦' },
+                  { id: 'sphere', label: 'Sphere', icon: '⚽' },
+                  { id: 'npc', label: 'Guest', icon: '👤' },
+                  { id: 'lava', label: 'Lava', icon: '🔥' },
+                  { id: 'water', label: 'Water', icon: '💧' },
+                  { id: 'goal', label: 'Portal', icon: '🌀' },
+                  { id: 'wedge', label: 'Wedge', icon: '📐' }
+                ].map(tool => (
+                  <button key={tool.id} onClick={() => addObject(tool.id)} className="flex flex-col items-center justify-center p-3 bg-white/5 rounded-2xl border border-transparent hover:border-red-600 transition-all hover:bg-white/10 group shadow-lg">
+                    <span className="text-2xl mb-2 group-hover:scale-110 transition-transform">{tool.icon}</span>
+                    <span className="text-[8px] font-black uppercase text-gray-400 tracking-widest">{tool.label}</span>
+                  </button>
+                ))}
               </div>
-            ) : (
-              <div className="flex-1 flex flex-col items-center justify-center text-center opacity-20">
-                <div className="text-4xl mb-2">🧱</div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Crea un proyecto para empezar</p>
+            </div>
+          </div>
+
+          <div className="lg:col-span-4 space-y-6">
+            <div className="bg-black/60 border border-white/10 rounded-[2rem] p-6 space-y-6 shadow-xl">
+              <h3 className="font-black text-white text-xs uppercase tracking-widest flex items-center space-x-2">
+                <span className="text-red-600">●</span><span>PROPIEDADES</span>
+              </h3>
+              
+              {selectedObject ? (
+                <div className="space-y-4">
+                  <div className="p-3 bg-white/5 rounded-xl border border-white/5">
+                    <p className="text-[8px] font-black text-gray-500 uppercase mb-2 tracking-widest">Material</p>
+                    <select value={selectedObject.material} onChange={e => updateObject(selectedObject.id, { material: e.target.value })} className="w-full bg-black text-white p-2 rounded-lg text-[9px] font-black uppercase outline-none border border-white/10">
+                      <option value="plastic">Plastic</option>
+                      <option value="neon">Neon</option>
+                      <option value="wood">Wood</option>
+                      <option value="grass">Grass</option>
+                      <option value="glass">Glass</option>
+                      <option value="slate">Slate</option>
+                      <option value="forcefield">Forcefield</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-3">
+                    {['X', 'Y', 'Z'].map(axis => (
+                      <div key={axis} className="bg-black/40 p-2 rounded-lg border border-white/5">
+                        <div className="flex justify-between items-center mb-1 px-1">
+                           <label className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Axis {axis}</label>
+                           <span className="text-[8px] font-black text-red-500">{selectedObject.position[axis.toLowerCase() as keyof typeof selectedObject.position].toFixed(1)}</span>
+                        </div>
+                        <input type="range" min="-50" max="50" step="0.5" value={selectedObject.position[axis.toLowerCase() as keyof typeof selectedObject.position]} onChange={e => updateObject(selectedObject.id, { position: { [axis.toLowerCase()]: parseFloat(e.target.value) } })} className="w-full accent-red-600 h-1 bg-white/10 rounded-full appearance-none cursor-pointer" />
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex gap-2">
+                    <input type="color" value={selectedObject.color} onChange={e => updateObject(selectedObject.id, { color: e.target.value })} className="h-8 w-full bg-black border border-white/10 rounded-lg cursor-pointer" />
+                    <button onClick={() => { if(selectedObjectId !== 'spawn') { setGeneratedGame({...generatedGame!, objects: generatedGame!.objects.filter(o => o.id !== selectedObjectId)}); setSelectedObjectId(null); } }} className="bg-red-600/10 text-red-600 px-3 rounded-lg text-[8px] font-black uppercase hover:bg-red-600 hover:text-white transition-all shadow-md">DEL</button>
+                  </div>
+                </div>
+              ) : (
+                <div className="py-10 text-center opacity-30">
+                  <p className="text-[9px] font-black uppercase tracking-widest">Selecciona un objeto</p>
+                </div>
+              )}
+            </div>
+
+            <div className="bg-white/5 border border-white/10 rounded-[2rem] p-5 space-y-3 shadow-xl">
+              <h3 className="text-[9px] font-black text-white uppercase tracking-widest">Explorer</h3>
+              <div className="max-h-48 overflow-y-auto space-y-1 scrollbar-hide">
+                {generatedGame.objects.map(obj => (
+                  <button 
+                    key={obj.id} 
+                    onClick={() => setSelectedObjectId(obj.id)}
+                    className={`w-full text-left p-2 rounded-lg text-[9px] font-black uppercase transition-all ${selectedObjectId === obj.id ? 'bg-red-600 text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
+                  >
+                    {obj.type} <span className="opacity-40 text-[7px] ml-1">#{obj.id.slice(0,4)}</span>
+                  </button>
+                ))}
               </div>
-            )}
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

@@ -10,15 +10,21 @@ export enum View {
 }
 
 export type BuildersClubType = 'None' | 'Classic' | 'Turbo' | 'Outrageous';
+export type BloxMaterial = 'plastic' | 'neon' | 'wood' | 'grass' | 'glass' | 'slate' | 'forcefield';
 
 export interface BloxObject {
   id: string;
-  type: 'box' | 'sphere' | 'npc' | 'goal' | 'lava';
+  type: 'box' | 'sphere' | 'npc' | 'goal' | 'lava' | 'wedge' | 'water' | 'sword' | 'hammer';
   position: { x: number; y: number; z: number };
   color: string;
   size: number;
+  material?: BloxMaterial;
   label?: string;
-  behavior?: string;
+  health?: number;
+  behavior?: 'wander' | 'follow' | 'idle';
+  // Add missing properties to support game logic and fix type errors
+  isSafeZone?: boolean;
+  isPickable?: boolean;
 }
 
 export interface GameExperience {
@@ -42,9 +48,12 @@ export interface UserProfile {
   username: string;
   avatarColor: string;
   bloxbucks: number;
+  ownedItems: string[];
+  equippedItems: string[];
   outfits: string[];
   friends: FriendRelation[];
   pendingRequests: FriendRelation[];
   buildersClub: BuildersClubType;
-  hasExecutor: boolean;
+  hasArceusX: boolean; // Sustituye a hasExecutor
+  isAdmin: boolean;
 }

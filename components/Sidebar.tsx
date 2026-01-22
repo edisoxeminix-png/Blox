@@ -9,109 +9,67 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, user }) => {
-  const items = [
-    { id: View.HOME, label: 'Games' },
-    { id: View.STORE, label: 'Catalog' },
-    { id: View.STUDIO, label: 'Develop' },
-    { id: View.FRIENDS, label: 'People' },
-    { id: View.AVATAR, label: 'Character' },
+  const navItems = [
+    { id: View.HOME, label: 'Inicio', icon: '🏠' },
+    { id: View.STORE, label: 'Tienda', icon: '🛍️' },
+    { id: View.AVATAR, label: 'Avatar', icon: '👤' },
+    { id: View.STUDIO, label: 'Equipo', icon: '🛠️' },
+    { id: View.BUILDERS_CLUB, label: 'Más', icon: '⋯' },
   ];
-
-  const getBCIcon = () => {
-    switch (user.buildersClub) {
-      case 'Classic': return '👷';
-      case 'Turbo': return '🚀';
-      case 'Outrageous': return '🎩';
-      default: return null;
-    }
-  };
 
   return (
     <div className="flex flex-col z-[100]">
-      {/* Utility Top Strip */}
-      <div className="bg-[#e1e1e1] border-b border-gray-300 h-7 flex items-center justify-end px-4 text-[11px] text-gray-600 space-x-4">
-        <div className="flex items-center space-x-1">
-          {getBCIcon() && <span title={user.buildersClub + " Builders Club"}>{getBCIcon()}</span>}
-          <span>Logged in as <b>{user.username}</b></span>
-        </div>
-        <span className="text-gray-300">|</span>
-        <span 
-          onClick={() => setView(View.BUILDERS_CLUB)} 
-          className="text-orange-600 cursor-pointer font-bold hover:underline"
-        >
-          Builders Club
-        </span>
-        <span className="text-gray-300">|</span>
-        <span className="text-blue-700 cursor-pointer font-bold">Logout</span>
-      </div>
-
-      {/* Main Blue Header */}
-      <header className="classic-gradient h-16 border-b border-[#003366] flex items-center px-4 md:px-10 justify-between">
-        <div className="flex items-center space-x-6 h-full">
-          {/* Classic Red Logo */}
-          <div 
-            onClick={() => setView(View.HOME)}
-            className="bg-[#d00] border-b-4 border-[#800] px-3 py-1 text-white font-black italic tracking-tighter text-2xl cursor-pointer hover:bg-[#e00] transition-colors"
-          >
-            BLOX
-          </div>
-
-          <nav className="hidden md:flex h-full">
-            {items.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => setView(item.id)}
-                className={`px-4 h-full text-sm font-bold transition-all relative ${
-                  currentView === item.id 
-                    ? 'bg-white/10 text-white border-b-4 border-white' 
-                    : 'text-blue-100 hover:bg-white/5'
-                }`}
-              >
-                {item.label}
-              </button>
-            ))}
-          </nav>
+      {/* Top Header Bar */}
+      <header className="h-14 bg-white border-b border-gray-200 flex items-center px-6 justify-between sticky top-0 z-[110] shadow-sm">
+        <div className="flex items-center space-x-4 w-1/4">
+           <div className="text-xl font-black italic text-gray-900 tracking-tighter uppercase select-none">BLOX</div>
         </div>
 
-        <div className="flex items-center space-x-6">
-          <div className="hidden lg:flex flex-col items-end">
-            <div className="flex items-center space-x-2 text-white font-bold text-sm">
-              <span className="text-yellow-400">✧</span>
-              <span>{user.bloxbucks.toLocaleString()} Tix</span>
-            </div>
-            <div className="flex items-center space-x-2 text-white/70 font-bold text-[10px]">
-              <span className="text-green-400">◎</span>
-              <span>0 Robux</span>
-            </div>
+        {/* Search Bar centralizada */}
+        <div className="flex-1 max-w-lg relative">
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
           </div>
-          <div className="w-10 h-10 border-2 border-white/20 bg-gray-200 shadow-inner overflow-hidden flex items-center justify-center" style={{ backgroundColor: user.avatarColor }}>
-             {getBCIcon() && <span className="text-xl drop-shadow-sm">{getBCIcon()}</span>}
+          <input 
+            type="text" 
+            placeholder="Buscar" 
+            className="w-full bg-gray-50 border border-gray-100 rounded-full py-2 pl-12 pr-4 text-xs font-bold focus:ring-2 focus:ring-blue-100 transition-all outline-none text-gray-700 placeholder:text-gray-400"
+          />
+        </div>
+
+        {/* Iconos Superiores Derecha */}
+        <div className="w-1/4 flex justify-end items-center space-x-5">
+          <div className="flex items-center space-x-1.5 cursor-pointer hover:bg-gray-50 p-1.5 px-3 rounded-full border border-transparent hover:border-gray-100 transition-all">
+            <span className="text-lg">💰</span>
+            <span className="text-xs font-black text-gray-800 tracking-tight">{user.bloxbucks.toLocaleString()}</span>
+          </div>
+          <div className="relative cursor-pointer hover:bg-gray-50 p-2 rounded-full transition-all">
+            <span className="text-xl">🔔</span>
+            <div className="absolute top-1 right-1 bg-red-600 text-[8px] text-white font-black w-4 h-4 flex items-center justify-center rounded-full border-2 border-white">5</div>
+          </div>
+          <div className="w-8 h-8 rounded-full bg-blue-600 border border-white shadow-sm flex items-center justify-center text-[10px] text-white font-black overflow-hidden">
+             <img src={`https://api.dicebear.com/7.x/bottts/svg?seed=${user.username}`} alt="AvatarSmall" />
           </div>
         </div>
       </header>
-      
-      {/* Sub Header (Mobile Navigation) */}
-      <div className="md:hidden bg-white border-b border-gray-300 flex overflow-x-auto">
-        {items.map((item) => (
+
+      {/* Side Navigation exacto al de la imagen */}
+      <aside className="fixed left-0 top-14 bottom-0 w-20 bg-white border-r border-gray-100 flex flex-col items-center py-6 space-y-7 shadow-[2px_0_5px_rgba(0,0,0,0.01)]">
+        {navItems.map((item) => (
           <button
             key={item.id}
             onClick={() => setView(item.id)}
-            className={`px-4 py-2 text-xs font-bold whitespace-nowrap ${
-              currentView === item.id ? 'text-[#0055aa] border-b-2 border-[#0055aa]' : 'text-gray-500'
-            }`}
+            className={`flex flex-col items-center space-y-1 w-full relative transition-all duration-300 ${currentView === item.id ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}
           >
-            {item.label}
+            {/* Indicador sutil de selección vertical */}
+            {currentView === item.id && (
+              <div className="absolute left-0 top-1 bottom-1 w-[3px] bg-blue-600 rounded-r-full shadow-[0_0_8px_rgba(37,99,235,0.4)]" />
+            )}
+            <span className={`text-2xl transition-transform ${currentView === item.id ? 'scale-110' : 'group-hover:scale-110'}`}>{item.icon}</span>
+            <span className={`text-[10px] font-black uppercase tracking-tight ${currentView === item.id ? 'opacity-100' : 'opacity-70'}`}>{item.label}</span>
           </button>
         ))}
-        <button
-          onClick={() => setView(View.BUILDERS_CLUB)}
-          className={`px-4 py-2 text-xs font-bold whitespace-nowrap text-orange-600 ${
-            currentView === View.BUILDERS_CLUB ? 'border-b-2 border-orange-600' : ''
-          }`}
-        >
-          Builders Club
-        </button>
-      </div>
+      </aside>
     </div>
   );
 };

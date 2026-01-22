@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blox 2011</title>
+    <title>Blox Arregla - 2011 Emulator</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700;900&display=swap" rel="stylesheet">
     <style>
@@ -33,15 +33,21 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
         ::-webkit-scrollbar {
-            width: 12px;
+            width: 8px;
         }
         ::-webkit-scrollbar-track {
-            background: #e1e1e1;
+            background: transparent;
         }
         ::-webkit-scrollbar-thumb {
-            background: #888;
-            border: 3px solid #e1e1e1;
+            background: rgba(255,255,255,0.2);
             border-radius: 10px;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
         }
     </style>
 <script type="importmap">
